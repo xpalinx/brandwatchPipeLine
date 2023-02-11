@@ -9,10 +9,10 @@ import Utils
 
 class BWManager:
     def __init__(self):
-        self.username = "jlozano@phyx.co"
-        self.password = "Phyxbrand2023+"
+        self.username = ""
+        self.password = ""
         self.token_path = "tokens.txt"
-        self.YOUR_ACCOUNT = "jlozano@phyx.co"
+        self.YOUR_ACCOUNT = ""
         self.YOUR_PROJECT = "PHYX"
         self.project = None
 
