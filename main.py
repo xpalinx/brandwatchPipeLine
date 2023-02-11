@@ -13,7 +13,7 @@ while not Utils.is_today(date):
     tries = 10
     for i in range(tries):
         try:
-            group_name = 'Banco de Bogotá'
+            group_name = ''
             df = bw.download_group_data_to_df(group_name, date, Utils.get_next_day(date))
             df = Utils.get_columns_bdb(df, Utils.get_dia(date), Utils.get_mes(date))
             Utils.charge_sql_bdb(db, df)
@@ -26,7 +26,7 @@ while not Utils.is_today(date):
 
     for i in range(tries):
         try:
-            query_name = 'Competidores (Banco de Bogotá) 2023'
+            query_name = ''
             df = bw.download_query_data_to_df(query_name, date, Utils.get_next_day(date))
             df = Utils.get_columns_comp(df, Utils.get_dia(date), Utils.get_mes(date))
             Utils.charge_sql_comp(db, df)
