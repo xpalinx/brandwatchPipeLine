@@ -1,9 +1,37 @@
 import pandas as pd
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
+
+
+def start_date():
+    today = datetime.now()
+    five_months_ago = today + relativedelta(months=-5)
+    return datetime(five_months_ago.year, five_months_ago.month, 1)
+
+
+def get_next_day(current_date):
+    current_date += timedelta(days=1)
+    return current_date
+
+
+def get_dia(current_date):
+    return current_date.day
+
+
+def get_mes(current_date):
+    return current_date.month
+
+
+def is_today(current_date):
+    today = datetime.now()
+    if current_date == today:
+        return True
+    else:
+        return False
 
 
 def json_to_df(jsonobj):
     df = pd.DataFrame(jsonobj)
-    df = df.astype(str)
     return df
 
 
@@ -15,44 +43,49 @@ def split_dataframe(df, chunk_size=10000):
     return chunks
 
 
-def charge_sql(db, df, query_name):
-    retries = 0
+def charge_sql_comp(db, df):
+    df["category"] = df["category"].astype(str)
     chunks = split_dataframe(df)
     for c in chunks:
-        print("Sending chunk")
-        db.create_or_insert_table(c, query_name)
-    return retries
+        db.create_or_insert_comp(c)
 
 
-def get_columns_bdb(df):
-    return df.loc[:, ['added', 'categoryDetails', 'author', 'avatarurl', 'city', 'continent', 'country', 'region',
-                      'engagementtype', 'facebookauthorid', 'facebookcomments', 'facebooklikes',
-                      'facebookrole', 'facebookshares', 'facebooksubtype'
-                         , 'fulltext', 'fullname', 'gender', 'guid', 'impressions',
-                      'instagramcommentcount', 'instagramfollowercount', 'instagramfollowingcount',
-                      'instagraminteractionscount'
-                         , 'instagramlikecount', 'instagrampostcount', 'interest', 'language',
-                      'linkedincomments', 'linkedinengagement', 'linkedinimpressions',
-                      'linkedinlikes', 'linkedinshares'
-                         , 'linkedinsponsored', 'linkedinvideoviews', 'matchpositions',
-                      'mediaurls', 'monthlyvisitors', 'pagetype', 'parentpostid', 'pubtype',
-                      'publishersubtype'
-                         , 'queryname', 'reachestimate', 'redditscore', 'redditscoreupvoteratio',
-                      'redditcomments', 'redditauthorkarma', 'redditauthorawardeekarma'
-                         , 'redditauthorawarderkarma', 'resourcetype', 'rootpostid', 'sentiment',
-                      'snippet', 'subreddit', 'subredditsubscribers', 'subtype'
-                         , 'tags', 'threadauthor', 'threadcreated', 'threadentrytype', 'threadid',
-                      'threadurl', 'title', 'twitterfollowers'
-                         , 'twitterfollowing', 'twitterpostcount', 'twitterreplycount',
-                      'twitterretweets', 'twitterlikecount', 'twitterverified'
-                         , 'url', 'copyright', 'weblogtitle', 'pagetypename', 'contentsource',
-                      'contentsourcename', 'impact', 'resourceid', 'imagemd5s', 'imageinfo'
-                         , 'logoimages']]
+def charge_sql_bdb(db, df):
+    chunks = split_dataframe(df)
+    for c in chunks:
+        db.create_or_insert_bdb(c)
 
 
-def get_date_time(df):
+def get_columns_comp(df, dia, mes):
     df.columns = df.columns.str.lower()
-    df['Dates'] = pd.to_datetime(df['added']).dt.date
-    df['Time'] = pd.to_datetime(df['added']).dt.time
-    return df
+    df['dia'] = dia
+    df['mes'] = mes
+    df = df.assign(alcance=df['impact'] * df['impressions'] / 100)
+    columns_rename = {'sentiment': 'sentimiento',
+                      'author': 'autor',
+                      'twitterfollowers': 'seguidores',
+                      'title': 'titulo',
+                      'categorydetails': 'category'
+                      }
+    df.rename(columns=columns_rename, inplace=True)
+    columns_to_insert = ['sentimiento', 'dia', 'mes', 'url', 'autor', 'seguidores', 'titulo', 'alcance', 'category']
+    df_to_insert = df.loc[:, columns_to_insert]
+    return df_to_insert
 
+
+def get_columns_bdb(df, dia, mes):
+    df.columns = df.columns.str.lower()
+    df['dia'] = dia
+    df['mes'] = mes
+    df = df.assign(alcance=df['impact'] * df['impressions'] / 100)
+    columns_rename = {'sentiment': 'sentimiento',
+                      'author': 'autor',
+                      'avatarurl': 'avatar',
+                      'twitterfollowers': 'seguidores',
+                      'title': 'titulo',
+                      'categorydetails': 'category'
+                      }
+    df.rename(columns=columns_rename, inplace=True)
+    columns_to_insert = ['sentimiento', 'dia', 'mes', 'avatar', 'url', 'autor', 'seguidores', 'titulo', 'alcance']
+    df_to_insert = df.loc[:, columns_to_insert]
+    return df_to_insert
