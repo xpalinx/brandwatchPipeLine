@@ -5,8 +5,8 @@ from sqlalchemy import exc
 
 class DBManager:
     def __init__(self):
-        self.server = 'DESKTOP-1K5QK0J\SQLEXPRESS'
-        self.database = 'BDB'
+        self.server = ''
+        self.database = ''
         self.conn = None
 
     def create_or_insert_comp(self, df):
