@@ -48,12 +48,14 @@ def split_dataframe(df, chunk_size=10000):
 
 
 def charge_sql_comp(db, df):
+    check_nat(df)
     chunks = split_dataframe(df)
     for c in chunks:
         db.create_or_insert_comp(c)
 
 
 def charge_sql_bdb(db, df):
+    check_nat(df)
     chunks = split_dataframe(df)
     for c in chunks:
         db.create_or_insert_bdb(c)
@@ -86,15 +88,6 @@ def get_summary_comp(df, dia, mes, año):
             row = [dia, mes, pos, neg, neu, total, impresiones, impacto, response_times['min'],
                    response_times['max'], response_times['mean']]
             df_new = pd.concat([df_new, pd.DataFrame([row], columns=columns_to_insert)], ignore_index=True)
-            df_new.loc[
-                df_new['Tiempo minimo de respuesta'] == pd.Timestamp.min, 'Tiempo minimo de respuesta'] = pd.Timestamp(
-                '1900-01-01')
-            df_new.loc[
-                df_new['Tiempo máximo de respuesta'] == pd.Timestamp.min, 'Tiempo máximo de respuesta'] = pd.Timestamp(
-                '1900-01-01')
-            df_new.loc[
-                df_new['Tiempo promedio de respuesta'] == pd.Timestamp.min, 'Tiempo promedio de respuesta'] = pd.Timestamp(
-                '1900-01-01')
             print("appended rows ", row)
         return df_new
     except Exception as e:
@@ -124,12 +117,7 @@ def get_summary_bdb(df, dia, mes, año):
         row = [dia, mes, pos, neg, neu, total, impresiones, impacto, response_times['min'],
                response_times['max'], response_times['mean']]
         df_new = pd.concat([df_new, pd.DataFrame([row], columns=columns_to_insert)], ignore_index=True)
-        df_new.loc[df_new['Tiempo minimo de respuesta'] == pd.Timestamp.min, 'Tiempo minimo de respuesta'] = pd.Timestamp(
-            '1900-01-01')
-        df_new.loc[df_new['Tiempo máximo de respuesta'] == pd.Timestamp.min, 'Tiempo máximo de respuesta'] = pd.Timestamp(
-            '1900-01-01')
-        df_new.loc[df_new['Tiempo promedio de respuesta'] == pd.Timestamp.min, 'Tiempo promedio de respuesta'] = pd.Timestamp(
-            '1900-01-01')
+        print("appended rows ", row)
         return df_new
     except Exception as e:
         print("exception ", e)
@@ -142,3 +130,9 @@ def calcular_tiempos_de_respuesta(df):
     df = df[df['replyto'].notnull()]
     response_times = df['response_time'].agg(['mean', 'min', 'max'])
     return response_times
+
+
+def check_nat(df):
+    df.dropna(inplace=True)
+    df.fillna(value='1900-01-01', inplace=True)
+    print(df.head(5))
