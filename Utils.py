@@ -9,6 +9,9 @@ def start_date():
     return datetime(five_months_ago.year, five_months_ago.month, 1)
 
 
+def today():
+    return datetime.now()
+
 def get_next_day(current_date):
     current_date += timedelta(days=1)
     return current_date
@@ -48,14 +51,12 @@ def split_dataframe(df, chunk_size=10000):
 
 
 def charge_sql_comp(db, df):
-    check_nat(df)
     chunks = split_dataframe(df)
     for c in chunks:
         db.create_or_insert_comp(c)
 
 
 def charge_sql_bdb(db, df):
-    check_nat(df)
     chunks = split_dataframe(df)
     for c in chunks:
         db.create_or_insert_bdb(c)
@@ -63,8 +64,7 @@ def charge_sql_bdb(db, df):
 
 def get_summary_comp(df, dia, mes, año):
     columns_to_insert = ['dia', 'mes', 'año', 'marca', '%Positivo', '%Neutro', '%Negativo', 'total', 'impresiones',
-                         'impacto', 'Tiempo minimo de respuesta', 'Tiempo máximo de respuesta',
-                         'Tiempo promedio de respuesta']
+                         'impacto']
     bancos = ['Bancolombia', 'BBVA', 'Davivienda', 'Scotiabank Colpatria', 'Banco de Bogotá', 'Daviplata', 'Nequi']
 
     df.columns = df.columns.str.lower()
@@ -84,9 +84,7 @@ def get_summary_comp(df, dia, mes, año):
             impresiones = df_filtered['impressions'].sum()
             impacto = df_filtered['impact'].sum()
             total = df_filtered.shape[0]
-            response_times = calcular_tiempos_de_respuesta(df)
-            row = [dia, mes, pos, neg, neu, total, impresiones, impacto, response_times['min'],
-                   response_times['max'], response_times['mean']]
+            row = [dia, mes, año, banco, pos, neg, neu, total, impresiones, impacto]
             df_new = pd.concat([df_new, pd.DataFrame([row], columns=columns_to_insert)], ignore_index=True)
             print("appended rows ", row)
         return df_new
@@ -95,9 +93,8 @@ def get_summary_comp(df, dia, mes, año):
 
 
 def get_summary_bdb(df, dia, mes, año):
-    columns_to_insert = ['dia', 'mes', '%Positivo', '%Neutro', '%Negativo', 'total', 'impresiones',
-                         'impacto', 'Tiempo minimo de respuesta', 'Tiempo máximo de respuesta',
-                         'Tiempo promedio de respuesta']
+    columns_to_insert = ['dia', 'mes', 'año', '%Positivo', '%Neutro', '%Negativo', 'total', 'impresiones',
+                         'impacto']
 
     df.columns = df.columns.str.lower()
     df['dia'] = dia
@@ -113,9 +110,7 @@ def get_summary_bdb(df, dia, mes, año):
         impresiones = df['impressions'].sum()
         impacto = df['impact'].sum()
         total = df.shape[0]
-        response_times = calcular_tiempos_de_respuesta(df)
-        row = [dia, mes, pos, neg, neu, total, impresiones, impacto, response_times['min'],
-               response_times['max'], response_times['mean']]
+        row = [dia, mes, año, pos, neg, neu, total, impresiones, impacto]
         df_new = pd.concat([df_new, pd.DataFrame([row], columns=columns_to_insert)], ignore_index=True)
         print("appended rows ", row)
         return df_new

@@ -7,7 +7,7 @@ from sqlalchemy import exc
 
 class DBManager:
     def __init__(self):
-        self.server = ' '
+        self.server = 'DESKTOP-1K5QK0J\SQLEXPRESS'
         self.database = 'BDB'
         self.conn = None
 
